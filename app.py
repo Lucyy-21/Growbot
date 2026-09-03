@@ -62,7 +62,8 @@ def whatsapp():
         sessions[sender]["step"] = "done"
         
         msg.body(f"🌱 GrowBot Recommendation for {location.title()}:\n\n{weather_tip}\n{advice}\n\nSend 'Hi' to start again!")
-
+    elif incoming_msg in ["thanks", "thank you", "thank", "ok", "okay", "great"]:
+        msg.body("🙏 You're welcome! Happy farming! 🌾\n\nSend 'Hi' anytime to get more advice.")
     else:
         msg.body("🌱 Hello! I'm GrowBot. Send 'Hi' to get started.")
 
