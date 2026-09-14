@@ -10,7 +10,42 @@ load_dotenv()
 app = Flask(__name__)
 api_key = os.getenv("OPENWEATHER_API_KEY")
 sessions = {}
+def match_crop(user_input):
+    """
+    Try to match user input to a crop in the CROPS dictionary.
+    Returns the crop key (e.g. 'maize') or None if no good match.
+    """
+    # 1. Clean the input
+    user_input = user_input.lower().strip()
 
+    # 2. Exact match against known crops
+    if user_input in CROPS:
+        return user_input
+
+    # 3. Curated typo map
+    typo_map = {
+        "maiz": "maize",
+        "maze": "maize",
+        "casava": "cassava",
+        "cassavaa": "cassava",
+        "tomatoe": "tomato",
+        "potato": "yam",       # common mistake
+        "g/nut": "groundnut",
+        "ground nut": "groundnut",
+        "coco yam": "cocoyam",
+        "plantin": "plantain",
+        "okro": "okra",
+    }
+    if user_input in typo_map:
+        return typo_map[user_input]
+
+    # 4. Partial match — only if exactly one crop contains the input
+    matches = [crop for crop in CROPS if user_input in crop]
+    if len(matches) == 1:
+        return matches[0]
+
+    # 5. No confident match
+    return None
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
     incoming_msg = request.values.get("Body", "").strip().lower()
@@ -45,10 +80,21 @@ def whatsapp():
             crop_list = get_crop_list()
             msg.body(f"📍 {location.title()} Weather Update:\n🌡 Temperature: {temp}°C\n🌤 Condition: {description}\n\nWhat crop are you planning to plant?\nAvailable crops: {crop_list}")
 
-    elif sessions.get(sender, {}).get("step") == "waiting_for_crop":
-        crop = incoming_msg
-        temp = sessions[sender]["temp"]
-        location = sessions[sender]["location"]
+   elif sessions.get(sender, {}).get("step") == "waiting_for_crop":
+    crop = match_crop(incoming_msg)
+
+    if crop is None:
+        # Stay in the same step so they can try again
+        msg.body(
+            "❌ I don't recognize that crop.\n\n"
+            f"Available crops: {get_crop_list()}\n\n"
+            "Please reply with one of those."
+        )
+        return str(resp)
+
+    temp = sessions[sender]["temp"]
+    location = sessions[sender]["location"]
+    # ... rest stays the same
 
         if temp > 35:
             weather_tip = "⚠️ Too hot to plant today. Water your crops early morning or evening."
