@@ -64,6 +64,10 @@ def whatsapp():
         msg.body(f"🌱 GrowBot Recommendation for {location.title()}:\n\n{weather_tip}\n{advice}\n\nSend 'Hi' to start again!")
     elif incoming_msg in ["thanks", "thank you", "thank", "ok", "okay", "great"]:
         msg.body("🙏 You're welcome! Happy farming! 🌾\n\nSend 'Hi' anytime to get more advice.")
+        
+    elif incoming_msg == "crops":
+        crop_list = get_crop_list()
+        msg.body(f"🌾 Available crops:\n{crop_list}\n\nReply with a crop name to get advice.")    
     else:
         msg.body("🌱 Hello! I'm GrowBot. Send 'Hi' to get started.")
 
